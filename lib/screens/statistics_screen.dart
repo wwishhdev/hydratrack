@@ -84,7 +84,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     return BarChart(
       BarChartData(
         alignment: BarChartAlignment.spaceAround,
-        maxY: (_dailyGoal * 1.2).toDouble(), // 20% más que la meta diaria como máximo
+        maxY: (_dailyGoal * 1.2).toDouble(),
         barTouchData: BarTouchData(
           enabled: true,
           touchTooltipData: BarTouchTooltipData(
@@ -174,62 +174,62 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildStatsSummary() {
-    if (_weeklyCons bestDay = 0;
-    DateTime? bestDayDate;
-
-    _weeklyConsumption.forEach((date, amount) {
-      totalumption.isEmpty) {
-    return Container();
+    if (_weeklyConsumption.isEmpty) {
+      return Container();
     }
 
     int totalConsumption = 0;
     int daysAboveGoal = 0;
-    intConsumption += amount;
-    if (amount >= _dailyGoal) {
-    daysAboveGoal++;
-    }
-    if (amount > bestDay) {
-    bestDay = amount;
-    bestDayDate = date;
-    }
+    int bestDay = 0;
+    DateTime? bestDayDate;
+
+    _weeklyConsumption.forEach((date, amount) {
+      totalConsumption += amount;
+      if (amount >= _dailyGoal) {
+        daysAboveGoal++;
+      }
+      if (amount > bestDay) {
+        bestDay = amount;
+        bestDayDate = date;
+      }
     });
 
     final dailyAverage = totalConsumption ~/ _weeklyConsumption.length;
     final achievementRate = (daysAboveGoal / _weeklyConsumption.length * 100).toStringAsFixed(0);
 
     return Card(
-    child: Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-    Text(
-    'summary',
-    style: Theme.of(context).textTheme.titleLarge,
-    ).tr(),
-    const SizedBox(height: 16.0),
-    _buildStatRow(
-    Icons.timeline,
-    'daily_average',
-    '$dailyAverage ml',
-    ),
-    const Divider(),
-    _buildStatRow(
-    Icons.check_circle_outline,
-    'days_goal_achieved',
-    '$daysAboveGoal / ${_weeklyConsumption.length} ($achievementRate%)',
-    ),
-    const Divider(),
-    _buildStatRow(
-    Icons.emoji_events,
-    'best_day',
-    bestDayDate != null
-    ? '${DateFormat.EEEE().format(bestDayDate!)} - $bestDay ml'
-        : 'N/A',
-    ),
-    ],
-    ),
-    ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'summary',
+              style: Theme.of(context).textTheme.titleLarge,
+            ).tr(),
+            const SizedBox(height: 16.0),
+            _buildStatRow(
+              Icons.timeline,
+              'daily_average',
+              '$dailyAverage ml',
+            ),
+            const Divider(),
+            _buildStatRow(
+              Icons.check_circle_outline,
+              'days_goal_achieved',
+              '$daysAboveGoal / ${_weeklyConsumption.length} ($achievementRate%)',
+            ),
+            const Divider(),
+            _buildStatRow(
+              Icons.emoji_events,
+              'best_day',
+              bestDayDate != null
+                  ? '${DateFormat.EEEE().format(bestDayDate!)} - $bestDay ml'
+                  : 'N/A',
+            ),
+          ],
+        ),
+      ),
     );
   }
 
