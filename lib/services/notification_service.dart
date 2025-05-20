@@ -23,7 +23,7 @@ class NotificationService {
 
   static Future<void> init() async {
     const AndroidInitializationSettings androidSettings =
-    AndroidInitializationSettings('app_icon');
+    AndroidInitializationSettings('@mipmap/ic_launcher');
 
     const InitializationSettings initSettings = InitializationSettings(
       android: androidSettings,
@@ -36,18 +36,16 @@ class NotificationService {
   }
 
   static void _handleNotificationResponse(NotificationResponse response) {
-    // Aquí manejaremos las acciones desde notificaciones
   }
 
   static Future<void> scheduleReminders(int intervalMinutes) async {
     await cancelAllNotifications();
 
-    // Programar notificaciones periódicas
     await _notifications.periodicallyShow(
       0,
       'HydraTrack',
       _randomMessage,
-      RepeatInterval.hourly, // Esto se ajustará según el intervalo
+      RepeatInterval.hourly,
       NotificationDetails(
         android: AndroidNotificationDetails(
           'hydratrack_channel',
@@ -55,6 +53,7 @@ class NotificationService {
           channelDescription: 'Canal para los recordatorios de consumo de agua',
           importance: Importance.high,
           priority: Priority.high,
+          styleInformation: const DefaultStyleInformation(true, true),
         ),
       ),
     );
