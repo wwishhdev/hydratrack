@@ -1,0 +1,19 @@
+{
+  "welcome_title": "Welcome to HydraTrack!",
+  "welcome_subtitle": "Your app to stay hydrated throughout the day",
+  "select_language": "Select your language",
+  "select_theme": "Select your theme",
+  "dark_mode": "Dark mode",
+  "get_started": "Get Started",
+  "enter_amount": "Enter amount",
+  "amount_ml": "Amount in ml",
+  "cancel": "Cancel",
+  "add": "Add",
+  "history": "History",
+  "custom_amount": "Custom amount",
+  "settings": "Settings",
+  "daily_goal": "Daily goal",
+  "reminder_interval": "Reminder interval",
+  "language": "Language",
+  "theme": "Theme"
+}

@@ -1,0 +1,19 @@
+{
+  "welcome_title": "¡Bienvenido a HydraTrack!",
+  "welcome_subtitle": "Tu app para mantenerte hidratado durante todo el día",
+  "select_language": "Selecciona tu idioma",
+  "select_theme": "Selecciona tu tema",
+  "dark_mode": "Modo oscuro",
+  "get_started": "Comenzar",
+  "enter_amount": "Ingresa cantidad",
+  "amount_ml": "Cantidad en ml",
+  "cancel": "Cancelar",
+  "add": "Añadir",
+  "history": "Historial",
+  "custom_amount": "Cantidad personalizada",
+  "settings": "Ajustes",
+  "daily_goal": "Meta diaria",
+  "reminder_interval": "Intervalo de recordatorio",
+  "language": "Idioma",
+  "theme": "Tema"
+}
