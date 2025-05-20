@@ -8,13 +8,11 @@ plugins {
 android {
     namespace = "com.gusty.hydratrack"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "27.0.12077973"  // Ya añadimos esta línea
+    ndkVersion = "27.0.12077973"
 
     compileOptions {
-        // Habilita el soporte para características de Java 8
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
-        // Agrega esta línea para habilitar el desugaring
         isCoreLibraryDesugaringEnabled = true
     }
 
