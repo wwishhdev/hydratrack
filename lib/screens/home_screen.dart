@@ -30,7 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final today = DateTime.now();
 
     _todayConsumptions = await storage.getConsumptionsByDate(today);
-    _consumedToday = _todayConsumptions.fold(0, (sum, item) => sum + item.amount);
+    _consumedToday =
+        _todayConsumptions.fold(0, (sum, item) => sum + item.amount);
 
     if (mounted) setState(() {});
   }
@@ -126,7 +127,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           itemCount: _todayConsumptions.length,
                           itemBuilder: (context, index) {
                             final consumption = _todayConsumptions[index];
-                            final time = DateFormat.Hm().format(consumption.timestamp);
+                            final time = DateFormat.Hm().format(
+                                consumption.timestamp);
                             return ListTile(
                               leading: const Icon(Icons.water_drop),
                               title: Text('${consumption.amount} ml'),
@@ -201,7 +203,64 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _deleteConsumption(int index) async {
-    // Esta función eliminaría un consumo del historial
-    // Implementación pendiente
+    // Mostrar diálogo de confirmación
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) =>
+          AlertDialog(
+            title: Text('confirm_delete').tr(),
+            content: Text('delete_consumption_confirmation').tr(),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: Text('cancel').tr(),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: Text(
+                  'delete',
+                  style: TextStyle(color: Colors.red),
+                ).tr(),
+              ),
+            ],
+          ),
+    );
+
+    if (confirmed != true) return;
+
+    // Eliminar el consumo
+    final consumptionToRemove = _todayConsumptions[index];
+    final storage = Provider.of<StorageService>(context, listen: false);
+
+    // Crear nueva lista sin el elemento eliminado
+    final updatedConsumptions = List<Consumption>.from(_todayConsumptions)
+      ..removeAt(index);
+
+    // Actualizar el almacenamiento
+    final today = DateTime.now();
+    final dateKey = '${today.year}-${today.month.toString().padLeft(
+        2, '0')}-${today.day.toString().padLeft(2, '0')}';
+
+    // Si usamos la API indirecta a través de StorageService
+    await storage.deleteAndReplaceConsumptions(today, updatedConsumptions);
+
+    // Actualizar la UI
+    await _loadTodayData();
+
+    // Mostrar confirmación
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('consumption_deleted').tr(),
+        action: SnackBarAction(
+          label: 'undo'.tr(),
+          onPressed: () async {
+            // Restaurar el consumo eliminado
+            await storage.saveConsumption(consumptionToRemove);
+            await _loadTodayData();
+          },
+        ),
+      ),
+    );
   }
 }

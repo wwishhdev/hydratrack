@@ -63,6 +63,21 @@ class StorageService {
         .toList();
   }
 
+  Future<void> deleteAndReplaceConsumptions(DateTime date, List<Consumption> newConsumptions) async {
+    String dateKey = _getDateKey(date);
+
+    if (newConsumptions.isEmpty) {
+      // Si la lista está vacía, eliminar la entrada
+      await _prefs.remove(dateKey);
+      return;
+    }
+
+    // Guardar la nueva lista
+    List<Map<String, dynamic>> serialized =
+    newConsumptions.map((c) => c.toJson()).toList();
+    await _prefs.setString(dateKey, jsonEncode(serialized));
+  }
+
   Future<Map<DateTime, int>> getWeeklyConsumption() async {
     final Map<DateTime, int> result = {};
     final now = DateTime.now();
