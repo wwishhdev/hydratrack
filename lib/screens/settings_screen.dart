@@ -119,13 +119,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChangeEnd: (value) async {
                 final settings = Provider.of<SettingsModel>(context, listen: false);
                 await settings.setReminderInterval(value.toInt());
-                // Reprogramar notificaciones
+
+                // Mantenemos la llamada, pero ahora no hará nada
                 await NotificationService.scheduleReminders(_reminderInterval);
 
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('reminders_updated').tr(),
+                    content: Text('Las notificaciones están temporalmente deshabilitadas'),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -137,6 +138,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text('15 min'),
                 Text('120 min'),
               ],
+            ),
+            const SizedBox(height: 12),
+            // Mensaje informativo sobre notificaciones
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.amber.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, color: Colors.amber),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      "Las notificaciones estarán disponibles en la próxima actualización.",
+                      style: TextStyle(
+                        color: Colors.amber[800],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

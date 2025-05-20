@@ -1,9 +1,9 @@
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+// import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:math';
 
 class NotificationService {
-  static final FlutterLocalNotificationsPlugin _notifications =
-  FlutterLocalNotificationsPlugin();
+  // static final FlutterLocalNotificationsPlugin _notifications =
+  // FlutterLocalNotificationsPlugin();
 
   static final List<String> _motivationalMessages = [
     "¡Recuerda hidratarte!",
@@ -22,44 +22,19 @@ class NotificationService {
   }
 
   static Future<void> init() async {
-    const AndroidInitializationSettings androidSettings =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
-
-    const InitializationSettings initSettings = InitializationSettings(
-      android: androidSettings,
-    );
-
-    await _notifications.initialize(
-      initSettings,
-      onDidReceiveNotificationResponse: _handleNotificationResponse,
-    );
+    print('Notificaciones deshabilitadas temporalmente');
   }
 
-  static void _handleNotificationResponse(NotificationResponse response) {
+  static void _handleNotificationResponse(dynamic response) {
+    // No hace nada
   }
 
   static Future<void> scheduleReminders(int intervalMinutes) async {
-    await cancelAllNotifications();
-
-    await _notifications.periodicallyShow(
-      0,
-      'HydraTrack',
-      _randomMessage,
-      RepeatInterval.hourly,
-      NotificationDetails(
-        android: AndroidNotificationDetails(
-          'hydratrack_channel',
-          'Recordatorios de agua',
-          channelDescription: 'Canal para los recordatorios de consumo de agua',
-          importance: Importance.high,
-          priority: Priority.high,
-          styleInformation: const DefaultStyleInformation(true, true),
-        ),
-      ),
-    );
+    print('Recordatorios programados cada $intervalMinutes minutos (deshabilitado)');
+    // Las notificaciones están deshabilitadas temporalmente
   }
 
   static Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
+    // No hace nada
   }
 }
