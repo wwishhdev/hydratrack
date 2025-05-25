@@ -47,5 +47,9 @@
   "undo": "Undo",
   "no_records": "No records for this day",
   "last_7_days": "Last 7 days",
-  "view_more": "View more records"
+  "view_more": "View more records",
+  "today": "Today",
+  "records": "records",
+  "notifications_disabled": "Notifications are temporarily disabled",
+  "notifications_coming_soon": "Notifications will be available in the next update."
 }

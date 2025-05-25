@@ -47,5 +47,9 @@
   "undo": "Deshacer",
   "no_records": "No hay registros para este día",
   "last_7_days": "Últimos 7 días",
-  "view_more": "Ver más registros"
+  "view_more": "Ver más registros",
+  "today": "Hoy",
+  "records": "registros",
+  "notifications_disabled": "Las notificaciones están temporalmente deshabilitadas",
+  "notifications_coming_soon": "Las notificaciones estarán disponibles en la próxima actualización."
 }
