@@ -28,43 +28,57 @@ class WaterProgressIndicator extends StatelessWidget {
               height: 200,
               child: CircularProgressIndicator(
                 value: clampedProgress,
-                strokeWidth: 12,
-                backgroundColor: Colors.grey[300],
+                strokeWidth: 14,
+                backgroundColor: Colors.white24,
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  percentComplete >= 100 ? Colors.green : Theme.of(context).primaryColor,
+                  percentComplete >= 100 ? Colors.greenAccent : Colors.white,
                 ),
               ),
             ),
-            Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.water_drop,
-                  size: 40,
-                  color: Theme.of(context).primaryColor,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$consumedAmount ml',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                Text(
-                  '$percentComplete%',
-                  style: Theme.of(context).textTheme.bodyLarge,
-                ),
-              ],
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withOpacity(0.15),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.water_drop,
+                    size: 40,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    '$consumedAmount ml',
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    '$percentComplete%',
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: Colors.white70,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
         const SizedBox(height: 16),
         Text(
           'daily_goal',
-          style: Theme.of(context).textTheme.titleMedium,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.white70,
+          ),
         ).tr(),
         Text(
           '$dailyGoal ml',
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: Theme.of(context).primaryColor,
+            color: Colors.white,
             fontWeight: FontWeight.bold,
           ),
         ),

@@ -26,6 +26,7 @@ void main() async {
       fallbackLocale: const Locale('es'),
       child: MultiProvider(
         providers: [
+          Provider<StorageService>.value(value: storageService), // Añadimos esta línea
           ChangeNotifierProvider(create: (_) => SettingsModel(storageService)),
         ],
         child: HydraTrackApp(isFirstRun: isFirstRun),

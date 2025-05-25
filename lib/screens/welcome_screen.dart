@@ -84,10 +84,13 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         title: Text('dark_mode').tr(),
                         value: _isDarkMode,
                         contentPadding: EdgeInsets.zero,
-                        onChanged: (value) {
+                        onChanged: (value) async {
                           setState(() {
                             _isDarkMode = value;
                           });
+                          // Aplicar el tema inmediatamente
+                          final settings = Provider.of<SettingsModel>(context, listen: false);
+                          await settings.setDarkMode(value);
                         },
                       ),
                     ],
@@ -99,7 +102,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 onPressed: () async {
                   final settings = Provider.of<SettingsModel>(context, listen: false);
                   await settings.setLanguage(_selectedLanguage);
-                  await settings.setDarkMode(_isDarkMode);
 
                   if (!mounted) return;
 

@@ -94,7 +94,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               final amount = _weeklyConsumption[date] ?? 0;
               final percent = (amount / _dailyGoal * 100).toStringAsFixed(0);
               return BarTooltipItem(
-                '${DateFormat.E().format(date)}\n$amount ml\n$percent%',
+                '${DateFormat.E(context.locale.languageCode).format(date)}\n$amount ml\n$percent%',
                 const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
@@ -113,7 +113,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   final date = dates[value.toInt()];
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(DateFormat.E().format(date)),
+                    child: Text(DateFormat.E(context.locale.languageCode).format(date)),
                   );
                 }
                 return const Text('');
@@ -198,6 +198,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     final achievementRate = (daysAboveGoal / _weeklyConsumption.length * 100).toStringAsFixed(0);
 
     return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -205,7 +207,10 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
           children: [
             Text(
               'summary',
-              style: Theme.of(context).textTheme.titleLarge,
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
             ).tr(),
             const SizedBox(height: 16.0),
             _buildStatRow(
@@ -224,7 +229,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               Icons.emoji_events,
               'best_day',
               bestDayDate != null
-                  ? '${DateFormat.EEEE().format(bestDayDate!)} - $bestDay ml'
+                  ? '${DateFormat.EEEE(context.locale.languageCode).format(bestDayDate!)} - $bestDay ml'
                   : 'N/A',
             ),
           ],
@@ -259,6 +264,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
 
   Widget _buildTips() {
     return Card(
+      elevation: 6,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       color: Theme.of(context).primaryColor.withOpacity(0.1),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -276,6 +283,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                   'hydration_tips',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: Theme.of(context).primaryColor,
+                    fontWeight: FontWeight.bold,
                   ),
                 ).tr(),
               ],

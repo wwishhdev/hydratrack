@@ -7,6 +7,7 @@ import 'package:hydratrack/screens/history_screen.dart';
 import 'package:hydratrack/screens/settings_screen.dart';
 import 'package:hydratrack/services/storage_service.dart';
 import 'package:hydratrack/widgets/progress_indicator.dart';
+import 'package:flutter/services.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -54,7 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('HydraTrack'),
+        title: const Text('HydraTrack'),
+        elevation: 0,
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -75,14 +77,45 @@ class _HomeScreenState extends State<HomeScreen> {
               hasScrollBody: false,
               child: Column(
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: WaterProgressIndicator(
-                      progress: goalProgress,
-                      consumedAmount: _consumedToday,
-                      dailyGoal: settings.dailyGoal,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(bottom: 24.0),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(30),
+                        bottomRight: Radius.circular(30),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 8),
+                        Text(
+                          DateFormat.yMMMMd(context.locale.languageCode).format(DateTime.now()),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: WaterProgressIndicator(
+                            progress: goalProgress,
+                            consumedAmount: _consumedToday,
+                            dailyGoal: settings.dailyGoal,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 24),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Row(
@@ -90,16 +123,28 @@ class _HomeScreenState extends State<HomeScreen> {
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.add),
-                            label: Text('+250 ml'),
+                            label: const Text('+250 ml'),
                             onPressed: () => _addWater(250),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
                           child: ElevatedButton.icon(
                             icon: const Icon(Icons.add),
-                            label: Text('+500 ml'),
+                            label: const Text('+500 ml'),
                             onPressed: () => _addWater(500),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -113,34 +158,86 @@ class _HomeScreenState extends State<HomeScreen> {
                       onPressed: () => _showCustomAmountDialog(),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Card(
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(8.0),
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _todayConsumptions.length,
-                          itemBuilder: (context, index) {
-                            final consumption = _todayConsumptions[index];
-                            final time = DateFormat.Hm().format(
-                                consumption.timestamp);
-                            return ListTile(
-                              leading: const Icon(Icons.water_drop),
-                              title: Text('${consumption.amount} ml'),
-                              subtitle: Text(time),
-                              trailing: IconButton(
-                                icon: const Icon(Icons.delete),
-                                onPressed: () => _deleteConsumption(index),
-                              ),
-                            );
-                          },
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Row(
+                      children: [
+                        Text(
+                          'Hoy',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        const Expanded(child: SizedBox()),
+                        Text(
+                          '${_todayConsumptions.length} registros',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: _todayConsumptions.isEmpty
+                        ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.water_drop_outlined,
+                            size: 60,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'no_records',
+                            style: TextStyle(color: Colors.grey[600]),
+                          ).tr(),
+                        ],
                       ),
+                    )
+                        : ListView.builder(
+                      padding: const EdgeInsets.all(16.0),
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      itemCount: _todayConsumptions.length,
+                      itemBuilder: (context, index) {
+                        final consumption = _todayConsumptions[index];
+                        final time = DateFormat.Hm().format(
+                            consumption.timestamp);
+                        return Card(
+                          elevation: 3,
+                          margin: const EdgeInsets.only(bottom: 8.0),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context).primaryColor.withOpacity(0.2),
+                              child: Icon(
+                                Icons.water_drop,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            title: Text(
+                              '${consumption.amount} ml',
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(time),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.delete, color: Colors.red),
+                              onPressed: () => _deleteConsumption(index),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
@@ -149,7 +246,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.push(
             context,
@@ -157,7 +254,8 @@ class _HomeScreenState extends State<HomeScreen> {
           );
         },
         tooltip: 'history'.tr(),
-        child: const Icon(Icons.history),
+        icon: const Icon(Icons.history),
+        label: Text('history').tr(),
       ),
     );
   }
@@ -175,7 +273,17 @@ class _HomeScreenState extends State<HomeScreen> {
             decoration: InputDecoration(
               labelText: 'amount_ml'.tr(),
               suffixText: 'ml',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
+            // Añadimos este formateador para permitir solo números enteros
+            inputFormatters: [
+              FilteringTextInputFormatter.digitsOnly,
+            ],
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
           actions: <Widget>[
             TextButton(
@@ -184,7 +292,7 @@ class _HomeScreenState extends State<HomeScreen> {
               },
               child: Text('cancel').tr(),
             ),
-            TextButton(
+            ElevatedButton(
               onPressed: () {
                 if (controller.text.isNotEmpty) {
                   int? amount = int.tryParse(controller.text);
@@ -210,6 +318,9 @@ class _HomeScreenState extends State<HomeScreen> {
           AlertDialog(
             title: Text('confirm_delete').tr(),
             content: Text('delete_consumption_confirmation').tr(),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
@@ -217,10 +328,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
-                child: Text(
-                  'delete',
-                  style: TextStyle(color: Colors.red),
-                ).tr(),
+                style: TextButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+                child: Text('delete').tr(),
               ),
             ],
           ),
@@ -238,8 +349,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
     // Actualizar el almacenamiento
     final today = DateTime.now();
-    final dateKey = '${today.year}-${today.month.toString().padLeft(
-        2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
     // Si usamos la API indirecta a través de StorageService
     await storage.deleteAndReplaceConsumptions(today, updatedConsumptions);
