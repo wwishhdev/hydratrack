@@ -51,5 +51,9 @@
   "today": "Hoy",
   "records": "registros",
   "notifications_disabled": "Las notificaciones están temporalmente deshabilitadas",
-  "notifications_coming_soon": "Las notificaciones estarán disponibles en la próxima actualización."
+  "notifications_coming_soon": "Las notificaciones estarán disponibles en la próxima actualización.",
+  "please_enter_amount": "Por favor ingresa una cantidad",
+  "enter_valid_number": "Ingresa un número válido",
+  "amount_must_be_positive": "La cantidad debe ser mayor a 0",
+  "amount_too_large": "La cantidad no debe exceder 5000 ml"
 }
