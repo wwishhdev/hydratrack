@@ -19,6 +19,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final Map<DateTime, int> _totalConsumptionMap = {};
   late int _dailyGoal;
   late DateTime _selectedDate;
+  bool _isLoading = true;
 
   @override
   void initState() {
@@ -28,6 +29,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Future<void> _loadData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     final settingsModel = Provider.of<SettingsModel>(context, listen: false);
     _dailyGoal = settingsModel.dailyGoal;
 
@@ -53,7 +58,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     }
 
     if (mounted) {
-      setState(() {});
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -75,7 +82,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         ],
       ),
-      body: Column(
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16.0),
