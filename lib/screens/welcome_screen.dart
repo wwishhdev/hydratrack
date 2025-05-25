@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:hydratrack/models/settings_model.dart';
 import 'package:hydratrack/screens/home_screen.dart';
+import 'package:hydratrack/services/notification_service.dart';
 
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({Key? key}) : super(key: key);
@@ -102,6 +103,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 onPressed: () async {
                   final settings = Provider.of<SettingsModel>(context, listen: false);
                   await settings.setLanguage(_selectedLanguage);
+
+                  // Solicitar permisos de notificaciones antes de navegar
+                  await NotificationService.requestPermissions();
+
+                  // Si hay un intervalo de recordatorio configurado, programar notificaciones
+                  final reminderInterval = settings.reminderInterval;
+                  if (reminderInterval > 0) {
+                    await NotificationService.scheduleReminders(reminderInterval);
+                  }
 
                   if (!mounted) return;
 

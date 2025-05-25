@@ -288,25 +288,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _showCustomAmountDialog() async {
     TextEditingController controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+
     return showDialog<void>(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text('enter_amount').tr(),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            decoration: InputDecoration(
-              labelText: 'amount_ml'.tr(),
-              suffixText: 'ml',
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8),
+          content: Form(
+            key: formKey,
+            child: TextFormField(
+              controller: controller,
+              keyboardType: TextInputType.number,
+              decoration: InputDecoration(
+                labelText: 'amount_ml'.tr(),
+                suffixText: 'ml',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
               ),
+              // Permitir solo números enteros
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+              ],
+              // Agregar validación para limitar el valor máximo
+              validator: (value) {
+                if (value == null || value.isEmpty) {
+                  return 'Por favor ingresa una cantidad';
+                }
+
+                int? amount = int.tryParse(value);
+                if (amount == null) {
+                  return 'Ingresa un número válido';
+                }
+
+                if (amount <= 0) {
+                  return 'La cantidad debe ser mayor a 0';
+                }
+
+                if (amount > 2000) {
+                  return 'La cantidad no debe exceder 2000 ml';
+                }
+
+                return null;
+              },
             ),
-            // Añadimos este formateador para permitir solo números enteros
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -320,13 +346,13 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (controller.text.isNotEmpty) {
+                if (formKey.currentState!.validate()) {
                   int? amount = int.tryParse(controller.text);
-                  if (amount != null && amount > 0) {
+                  if (amount != null && amount > 0 && amount <= 2000) {
                     _addWater(amount);
                   }
+                  Navigator.pop(context);
                 }
-                Navigator.pop(context);
               },
               child: Text('add').tr(),
             ),
