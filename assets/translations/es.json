@@ -46,5 +46,6 @@
   "consumption_deleted": "Registro de consumo eliminado",
   "undo": "Deshacer",
   "no_records": "No hay registros para este día",
-  "last_7_days": "Últimos 7 días"
+  "last_7_days": "Últimos 7 días",
+  "view_more": "Ver más registros"
 }

@@ -46,5 +46,6 @@
   "consumption_deleted": "Consumption record deleted",
   "undo": "Undo",
   "no_records": "No records for this day",
-  "last_7_days": "Last 7 days"
+  "last_7_days": "Last 7 days",
+  "view_more": "View more records"
 }
