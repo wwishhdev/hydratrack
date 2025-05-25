@@ -102,16 +102,25 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _getStarted,
+                style: ElevatedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
                 child: _isLoading
-                    ? SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    )
+                    ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
                 )
-                    : Text('get_started').tr(),
+                    : Text(
+                  'get_started',
+                  style: const TextStyle(fontSize: 16),
+                ).tr(),
               ),
               const SizedBox(height: 24),
             ],
@@ -128,29 +137,58 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     try {
       final settings = Provider.of<SettingsModel>(context, listen: false);
+
+      // Guardar configuraciones básicas
       await settings.setLanguage(_selectedLanguage);
+      print('Language set to: $_selectedLanguage');
 
-      // Solicitar permisos de notificaciones antes de navegar
-      final bool permissionGranted = await NotificationService.requestPermissions();
-      print('Permiso de notificación concedido: $permissionGranted');
+      // Re-inicializar el servicio de notificaciones para asegurar que esté listo
+      await NotificationService.init();
+      print('Notification service re-initialized');
 
-      // Si hay un intervalo de recordatorio configurado y los permisos se concedieron, programar notificaciones
-      final reminderInterval = settings.reminderInterval;
-      if (reminderInterval > 0 && permissionGranted) {
-        await NotificationService.scheduleReminders(reminderInterval);
+      // Mostrar dialog explicativo antes de solicitar permisos
+      final bool shouldRequestPermissions = await _showPermissionExplanationDialog();
+
+      bool permissionGranted = false;
+      if (shouldRequestPermissions) {
+        // Solicitar permisos de notificaciones
+        permissionGranted = await NotificationService.requestPermissions();
+        print('Permission granted: $permissionGranted');
+
+        // Si se concedieron permisos, programar notificaciones
+        if (permissionGranted) {
+          final reminderInterval = settings.reminderInterval;
+          if (reminderInterval > 0) {
+            await NotificationService.scheduleReminders(reminderInterval);
+            print('Reminders scheduled with interval: $reminderInterval minutes');
+          }
+        }
       }
 
-      if (!mounted) return;
+      // Mostrar resultado de permisos
+      await _showPermissionResultDialog(permissionGranted, shouldRequestPermissions);
 
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
-      );
+      // Navegar a la pantalla principal
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
+        );
+      }
     } catch (e) {
-      print('Error al iniciar la aplicación: $e');
-      // Mostrar un mensaje de error si algo sale mal
+      print('Error during app initialization: $e');
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Ha ocurrido un error: $e')),
+          SnackBar(
+            content: Text('Error al inicializar la aplicación. La app funcionará sin notificaciones.'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+
+        // Continuar a la app principal aunque haya errores
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
       }
     } finally {
@@ -160,5 +198,103 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         });
       }
     }
+  }
+
+  Future<bool> _showPermissionExplanationDialog() async {
+    return await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.notifications_outlined, color: Theme.of(context).primaryColor),
+            const SizedBox(width: 8),
+            const Text('Notificaciones'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'HydraTrack puede enviarte recordatorios para beber agua durante el día.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 12),
+            Text(
+              '¿Deseas activar las notificaciones?',
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '(Puedes cambiar esto más tarde en Configuración)',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Colors.grey[600],
+                fontSize: 12,
+              ),
+            ),
+          ],
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Ahora no'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Activar'),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
+
+  Future<void> _showPermissionResultDialog(bool granted, bool wasRequested) async {
+    if (!wasRequested) return;
+
+    String title;
+    String message;
+    IconData icon;
+    Color iconColor;
+
+    if (granted) {
+      title = '¡Perfecto!';
+      message = 'Las notificaciones están activadas. Te recordaremos beber agua regularmente.';
+      icon = Icons.check_circle_outline;
+      iconColor = Colors.green;
+    } else {
+      title = 'Sin notificaciones';
+      message = 'No hay problema. Puedes activar las notificaciones más tarde desde Configuración si cambias de opinión.';
+      icon = Icons.info_outline;
+      iconColor = Colors.orange;
+    }
+
+    await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(icon, color: iconColor),
+            const SizedBox(width: 8),
+            Text(title),
+          ],
+        ),
+        content: Text(message),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Continuar'),
+          ),
+        ],
+      ),
+    );
   }
 }
