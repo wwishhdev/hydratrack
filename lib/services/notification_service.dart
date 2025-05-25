@@ -76,18 +76,25 @@ class NotificationService {
 
   static Future<bool> requestPermissions() async {
     // Para iOS
-    final bool? iosResult = await _notifications.resolvePlatformSpecificImplementation<
-        IOSFlutterLocalNotificationsPlugin>()?.requestPermissions(
+    final bool? iosResult = await _notifications
+        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
+        ?.requestPermissions(
       alert: true,
       badge: true,
       sound: true,
     );
 
-    // Para Android (Android 13+ / API 33+)
-    final bool? androidResult = await _notifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()?.requestPermission();
+    // Para Android (API 33+)
+    bool androidResult = true;
+    try {
+      androidResult = await _notifications
+          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
+          ?.requestNotificationsPermission() ?? true;
+    } catch (e) {
+      print('Error al solicitar permisos en Android: $e');
+    }
 
-    return iosResult ?? androidResult ?? false;
+    return iosResult ?? androidResult;
   }
 
   static Future<void> scheduleReminders(int intervalMinutes) async {
