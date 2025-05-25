@@ -15,6 +15,7 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   String _selectedLanguage = 'es';
   bool _isDarkMode = false;
+  bool _isLoading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -100,26 +101,17 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                onPressed: () async {
-                  final settings = Provider.of<SettingsModel>(context, listen: false);
-                  await settings.setLanguage(_selectedLanguage);
-
-                  // Solicitar permisos de notificaciones antes de navegar
-                  await NotificationService.requestPermissions();
-
-                  // Si hay un intervalo de recordatorio configurado, programar notificaciones
-                  final reminderInterval = settings.reminderInterval;
-                  if (reminderInterval > 0) {
-                    await NotificationService.scheduleReminders(reminderInterval);
-                  }
-
-                  if (!mounted) return;
-
-                  Navigator.of(context).pushReplacement(
-                    MaterialPageRoute(builder: (_) => const HomeScreen()),
-                  );
-                },
-                child: Text('get_started').tr(),
+                onPressed: _isLoading ? null : _getStarted,
+                child: _isLoading
+                    ? SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    )
+                )
+                    : Text('get_started').tr(),
               ),
               const SizedBox(height: 24),
             ],
@@ -127,5 +119,46 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _getStarted() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final settings = Provider.of<SettingsModel>(context, listen: false);
+      await settings.setLanguage(_selectedLanguage);
+
+      // Solicitar permisos de notificaciones antes de navegar
+      final bool permissionGranted = await NotificationService.requestPermissions();
+      print('Permiso de notificación concedido: $permissionGranted');
+
+      // Si hay un intervalo de recordatorio configurado y los permisos se concedieron, programar notificaciones
+      final reminderInterval = settings.reminderInterval;
+      if (reminderInterval > 0 && permissionGranted) {
+        await NotificationService.scheduleReminders(reminderInterval);
+      }
+
+      if (!mounted) return;
+
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const HomeScreen()),
+      );
+    } catch (e) {
+      print('Error al iniciar la aplicación: $e');
+      // Mostrar un mensaje de error si algo sale mal
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Ha ocurrido un error: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 }

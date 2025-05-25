@@ -2,7 +2,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:math';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:easy_localization/easy_localization.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -49,9 +49,9 @@ class NotificationService {
     // Inicializar configuración para iOS
     const DarwinInitializationSettings initializationSettingsIOS =
     DarwinInitializationSettings(
-      requestSoundPermission: true,
-      requestBadgePermission: true,
-      requestAlertPermission: true,
+      requestSoundPermission: false, // Lo haremos manualmente
+      requestBadgePermission: false, // Lo haremos manualmente
+      requestAlertPermission: false, // Lo haremos manualmente
     );
 
     // Combinar configuraciones
@@ -75,30 +75,36 @@ class NotificationService {
   }
 
   static Future<bool> requestPermissions() async {
-    // Para iOS
-    final bool? iosResult = await _notifications
-        .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>()
-        ?.requestPermissions(
-      alert: true,
-      badge: true,
-      sound: true,
-    );
+    // Usar permission_handler para solicitar permisos de notificaciones
+    PermissionStatus status = await Permission.notification.status;
 
-    // Para Android (API 33+)
-    bool androidResult = true;
-    try {
-      androidResult = await _notifications
-          .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>()
-          ?.requestNotificationsPermission() ?? true;
-    } catch (e) {
-      print('Error al solicitar permisos en Android: $e');
+    print('Estado actual de permiso de notificación: $status');
+
+    // Si el permiso no está concedido, solicitarlo
+    if (status.isDenied || status.isRestricted || status.isLimited) {
+      status = await Permission.notification.request();
+      print('Nuevo estado de permiso después de solicitar: $status');
     }
 
-    return iosResult ?? androidResult;
+    // También solicitar permisos a través de flutter_local_notifications para iOS
+    if (status.isGranted) {
+      // Solo para iOS, asegurarse de que también se solicitan a través del plugin
+      final iosPlugin = _notifications
+          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
+      if (iosPlugin != null) {
+        await iosPlugin.requestPermissions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+      }
+    }
+
+    return status.isGranted;
   }
 
   static Future<void> scheduleReminders(int intervalMinutes) async {
-    // Solicitar permisos primero
+    // Verificar permisos primero
     final bool permissionsGranted = await requestPermissions();
     if (!permissionsGranted) {
       print('Permisos de notificación denegados');
