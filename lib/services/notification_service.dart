@@ -46,18 +46,9 @@ class NotificationService {
     const AndroidInitializationSettings initializationSettingsAndroid =
     AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // Inicializar configuración para iOS
-    const DarwinInitializationSettings initializationSettingsIOS =
-    DarwinInitializationSettings(
-      requestSoundPermission: false, // Lo haremos manualmente
-      requestBadgePermission: false, // Lo haremos manualmente
-      requestAlertPermission: false, // Lo haremos manualmente
-    );
-
-    // Combinar configuraciones
+    // Configuración general (solo Android)
     const InitializationSettings initializationSettings = InitializationSettings(
       android: initializationSettingsAndroid,
-      iOS: initializationSettingsIOS,
     );
 
     // Inicializar plugin con configuraciones
@@ -86,20 +77,6 @@ class NotificationService {
       print('Nuevo estado de permiso después de solicitar: $status');
     }
 
-    // También solicitar permisos a través de flutter_local_notifications para iOS
-    if (status.isGranted) {
-      // Solo para iOS, asegurarse de que también se solicitan a través del plugin
-      final iosPlugin = _notifications
-          .resolvePlatformSpecificImplementation<IOSFlutterLocalNotificationsPlugin>();
-      if (iosPlugin != null) {
-        await iosPlugin.requestPermissions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-      }
-    }
-
     return status.isGranted;
   }
 
@@ -126,17 +103,9 @@ class NotificationService {
       icon: '@mipmap/ic_launcher',
     );
 
-    // Configuración de los detalles de iOS
-    DarwinNotificationDetails iosDetails = const DarwinNotificationDetails(
-      presentAlert: true,
-      presentBadge: true,
-      presentSound: true,
-    );
-
-    // Configuración general
+    // Configuración general (solo Android)
     NotificationDetails platformDetails = NotificationDetails(
       android: androidDetails,
-      iOS: iosDetails,
     );
 
     final int minutesInDay = 24 * 60;
