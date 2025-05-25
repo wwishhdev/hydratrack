@@ -60,14 +60,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        items: [
+                        items: const [
                           DropdownMenuItem(
                             value: 'es',
-                            child: Text('Spanish').tr(),
+                            child: Text('Español'),
                           ),
                           DropdownMenuItem(
                             value: 'en',
-                            child: Text('English').tr(),
+                            child: Text('English'),
                           ),
                         ],
                         onChanged: (value) {

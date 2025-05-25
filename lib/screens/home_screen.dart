@@ -182,14 +182,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Row(
                     children: [
                       Text(
-                        'Hoy',
+                        'today',
                         style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
+                      ).tr(),
                       const Expanded(child: SizedBox()),
                       Text(
-                        '${_todayConsumptions.length} registros',
+                        '${_todayConsumptions.length} ${'records'.tr()}',
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],

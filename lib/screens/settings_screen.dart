@@ -126,7 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 if (!mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
-                    content: Text('Las notificaciones están temporalmente deshabilitadas'),
+                    content: Text('notifications_disabled').tr(),
                     duration: const Duration(seconds: 2),
                   ),
                 );
@@ -153,11 +153,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      "Las notificaciones estarán disponibles en la próxima actualización.",
+                      'notifications_coming_soon',
                       style: TextStyle(
                         color: Colors.amber[800],
                       ),
-                    ),
+                    ).tr(),
                   ),
                 ],
               ),
@@ -207,14 +207,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   if (!mounted) return;
                   context.setLocale(Locale(value));
                 },
-                items: [
+                items: const [
                   DropdownMenuItem(
                     value: 'es',
-                    child: Text('Spanish').tr(),
+                    child: Text('Español'),
                   ),
                   DropdownMenuItem(
                     value: 'en',
-                    child: Text('English').tr(),
+                    child: Text('English'),
                   ),
                 ],
               ),
