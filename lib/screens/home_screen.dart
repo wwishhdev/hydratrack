@@ -314,20 +314,20 @@ class _HomeScreenState extends State<HomeScreen> {
               // Agregar validación para limitar el valor máximo
               validator: (value) {
                 if (value == null || value.isEmpty) {
-                  return 'Por favor ingresa una cantidad';
+                  return 'please_enter_amount'.tr();
                 }
 
                 int? amount = int.tryParse(value);
                 if (amount == null) {
-                  return 'Ingresa un número válido';
+                  return 'enter_valid_number'.tr();
                 }
 
                 if (amount <= 0) {
-                  return 'La cantidad debe ser mayor a 0';
+                  return 'amount_must_be_positive'.tr();
                 }
 
-                if (amount > 2000) {
-                  return 'La cantidad no debe exceder 2000 ml';
+                if (amount > 5000) {
+                  return 'amount_too_large'.tr();
                 }
 
                 return null;
@@ -348,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen> {
               onPressed: () {
                 if (formKey.currentState!.validate()) {
                   int? amount = int.tryParse(controller.text);
-                  if (amount != null && amount > 0 && amount <= 2000) {
+                  if (amount != null && amount > 0 && amount <= 5000) {
                     _addWater(amount);
                   }
                   Navigator.pop(context);
