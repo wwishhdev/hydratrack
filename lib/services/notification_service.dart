@@ -30,6 +30,9 @@ class NotificationService {
     "Water, the secret to a clear mind!",
   ];
 
+  /**
+   * Get a random motivational message based on language code
+   */
   static String getRandomMessage(String languageCode) {
     final random = Random();
     if (languageCode == 'en') {
@@ -38,110 +41,141 @@ class NotificationService {
     return _motivationalMessagesEs[random.nextInt(_motivationalMessagesEs.length)];
   }
 
+  /**
+   * Initialize the notification service
+   */
   static Future<void> init() async {
-    // Inicializar timezone
-    tz.initializeTimeZones();
+    try {
+      // Initialize timezone
+      tz.initializeTimeZones();
 
-    // Inicializar configuración para Android
-    const AndroidInitializationSettings initializationSettingsAndroid =
-    AndroidInitializationSettings('@mipmap/ic_launcher');
+      // Initialize Android settings
+      const AndroidInitializationSettings initializationSettingsAndroid =
+      AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    // Configuración general (solo Android)
-    const InitializationSettings initializationSettings = InitializationSettings(
-      android: initializationSettingsAndroid,
-    );
-
-    // Inicializar plugin con configuraciones
-    await _notifications.initialize(
-      initializationSettings,
-      onDidReceiveNotificationResponse: _handleNotificationResponse,
-    );
-
-    print('Servicio de notificaciones inicializado correctamente');
-  }
-
-  static void _handleNotificationResponse(NotificationResponse response) {
-    // Maneja lo que pasa cuando el usuario toca una notificación
-    print('Notificación recibida: ${response.payload}');
-  }
-
-  static Future<bool> requestPermissions() async {
-    // Usar permission_handler para solicitar permisos de notificaciones
-    PermissionStatus status = await Permission.notification.status;
-
-    print('Estado actual de permiso de notificación: $status');
-
-    // Si el permiso no está concedido, solicitarlo
-    if (status.isDenied || status.isRestricted || status.isLimited) {
-      status = await Permission.notification.request();
-      print('Nuevo estado de permiso después de solicitar: $status');
-    }
-
-    return status.isGranted;
-  }
-
-  static Future<void> scheduleReminders(int intervalMinutes) async {
-    // Verificar permisos primero
-    final bool permissionsGranted = await requestPermissions();
-    if (!permissionsGranted) {
-      print('Permisos de notificación denegados');
-      return;
-    }
-
-    await cancelAllNotifications();
-
-    // Si el intervalo es 0, no programamos nada
-    if (intervalMinutes <= 0) return;
-
-    // Configuración de los detalles de Android
-    AndroidNotificationDetails androidDetails = const AndroidNotificationDetails(
-      'hydratrack_reminder',
-      'Water Reminders',
-      channelDescription: 'Reminders to drink water throughout the day',
-      importance: Importance.high,
-      priority: Priority.high,
-      icon: '@mipmap/ic_launcher',
-    );
-
-    // Configuración general (solo Android)
-    NotificationDetails platformDetails = NotificationDetails(
-      android: androidDetails,
-    );
-
-    final int minutesInDay = 24 * 60;
-    final int totalNotifications = minutesInDay ~/ intervalMinutes;
-
-    // Obtenemos el idioma actual
-    final String languageCode = tz.local.toString().contains('_')
-        ? tz.local.toString().split('_')[0]
-        : 'es';
-
-    for (int i = 1; i <= totalNotifications; i++) {
-      final DateTime now = DateTime.now();
-      final DateTime scheduledTime = now.add(Duration(minutes: i * intervalMinutes));
-
-      // Solo programamos notificaciones para hoy (no para mañana)
-      if (scheduledTime.day != now.day) continue;
-
-      await _notifications.zonedSchedule(
-        i, // ID único para cada notificación
-        'HydraTrack', // Título
-        getRandomMessage(languageCode), // Mensaje aleatorio según idioma
-        tz.TZDateTime.from(scheduledTime, tz.local),
-        platformDetails,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-        UILocalNotificationDateInterpretation.absoluteTime,
+      // General configuration (Android only)
+      const InitializationSettings initializationSettings = InitializationSettings(
+        android: initializationSettingsAndroid,
       );
 
-      print('Notificación programada para: $scheduledTime');
-    }
+      // Initialize plugin with configurations
+      await _notifications.initialize(
+        initializationSettings,
+        onDidReceiveNotificationResponse: _handleNotificationResponse,
+      );
 
-    print('Recordatorios programados cada $intervalMinutes minutos');
+      print('Notification service initialized successfully');
+    } catch (e) {
+      print('Error initializing notification service: $e');
+    }
   }
 
-  static Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
-    print('Todas las notificaciones han sido canceladas');
+  /**
+   * Handle notification response when user taps on notification
+   */
+  static void _handleNotificationResponse(NotificationResponse response) {
+    print('Notification received: ${response.payload}');
+  }
+
+  /**
+   * Request notification permissions
+   */
+  static Future<bool> requestPermissions() async {
+    try {
+      PermissionStatus status = await Permission.notification.status;
+      print('Current notification permission status: $status');
+
+      if (status.isDenied || status.isRestricted || status.isLimited) {
+        status = await Permission.notification.request();
+        print('New permission status after request: $status');
+      }
+
+      return status.isGranted;
+    } catch (e) {
+      print('Error requesting permissions: $e');
+      return false;
+    }
+  }
+
+  /**
+   * Schedule water reminder notifications
+   */
+  static Future<void> scheduleReminders(int intervalMinutes) async {
+    try {
+      // Check permissions first
+      final bool permissionsGranted = await requestPermissions();
+      if (!permissionsGranted) {
+        print('Notification permissions denied');
+        return;
+      }
+
+      // Cancel all existing notifications
+      await _notifications.cancelAll();
+
+      // If interval is 0, don't schedule anything
+      if (intervalMinutes <= 0) return;
+
+      // Configure Android notification details
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'hydratrack_reminder',
+        'Water Reminders',
+        channelDescription: 'Reminders to drink water throughout the day',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      // General configuration (Android only)
+      const NotificationDetails platformDetails = NotificationDetails(
+        android: androidDetails,
+      );
+
+      final int minutesInDay = 24 * 60;
+      final int totalNotifications = minutesInDay ~/ intervalMinutes;
+
+      // Get current language
+      final String languageCode = tz.local.toString().contains('_')
+          ? tz.local.toString().split('_')[0]
+          : 'es';
+
+      int scheduledCount = 0;
+      for (int i = 1; i <= totalNotifications; i++) {
+        final DateTime now = DateTime.now();
+        final DateTime scheduledTime = now.add(Duration(minutes: i * intervalMinutes));
+
+        // Only schedule notifications for today (not tomorrow)
+        if (scheduledTime.day != now.day) continue;
+
+        await _notifications.zonedSchedule(
+          i, // Unique ID for each notification
+          'HydraTrack', // Title
+          getRandomMessage(languageCode), // Random message based on language
+          tz.TZDateTime.from(scheduledTime, tz.local),
+          platformDetails,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+          uiLocalNotificationDateInterpretation:
+          UILocalNotificationDateInterpretation.absoluteTime,
+        );
+
+        scheduledCount++;
+        print('Notification scheduled for: $scheduledTime');
+      }
+
+      print('$scheduledCount reminders scheduled every $intervalMinutes minutes');
+    } catch (e) {
+      print('Error scheduling reminders: $e');
+    }
+  }
+
+  /**
+   * Cancel all scheduled reminders
+   */
+  static Future<void> cancelAllReminders() async {
+    try {
+      await _notifications.cancelAll();
+      print('All notifications have been cancelled');
+    } catch (e) {
+      print('Error canceling notifications: $e');
+    }
   }
 }
