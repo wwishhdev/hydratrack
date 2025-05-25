@@ -2,7 +2,6 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'dart:math';
 import 'package:timezone/timezone.dart' as tz;
 import 'package:timezone/data/latest.dart' as tz;
-import 'package:permission_handler/permission_handler.dart';
 
 class NotificationService {
   static final FlutterLocalNotificationsPlugin _notifications =
@@ -50,6 +49,8 @@ class NotificationService {
     try {
       if (_isInitialized) return;
 
+      print('Initializing notification service...');
+
       // Initialize timezone
       tz.initializeTimeZones();
 
@@ -63,13 +64,13 @@ class NotificationService {
       );
 
       // Initialize plugin with configurations
-      await _notifications.initialize(
+      final bool? initialized = await _notifications.initialize(
         initializationSettings,
         onDidReceiveNotificationResponse: _handleNotificationResponse,
       );
 
-      _isInitialized = true;
-      print('Notification service initialized successfully');
+      _isInitialized = initialized ?? false;
+      print('Notification service initialized: $_isInitialized');
     } catch (e) {
       print('Error initializing notification service: $e');
       _isInitialized = false;
@@ -84,44 +85,82 @@ class NotificationService {
   }
 
   /**
-   * Request notification permissions with proper dialog
+   * Request notification permissions - SIMPLIFICADO
    */
   static Future<bool> requestPermissions() async {
     try {
-      // Primero verificar si el servicio está inicializado
+      print('Requesting notification permissions...');
+
+      // Asegurar que el servicio esté inicializado
       if (!_isInitialized) {
         await init();
+        if (!_isInitialized) {
+          print('Failed to initialize notification service');
+          return false;
+        }
       }
 
-      // Usar el plugin de notificaciones locales para solicitar permisos
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+      _notifications.resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin>();
+
+      if (androidImplementation == null) {
+        print('Android implementation not found');
+        return false;
+      }
+
+      // Primero verificar si ya tenemos permisos
+      final bool? alreadyEnabled = await androidImplementation.areNotificationsEnabled();
+      print('Notifications already enabled: $alreadyEnabled');
+
+      if (alreadyEnabled == true) {
+        return true;
+      }
+
+      // Solicitar permisos de notificación (esto debería mostrar el diálogo nativo)
+      print('Requesting notification permission...');
+      final bool? notificationPermission = await androidImplementation.requestNotificationsPermission();
+      print('Notification permission result: $notificationPermission');
+
+      // Para Android 12+ solicitar permisos de alarma exacta si es necesario
+      try {
+        print('Requesting exact alarms permission...');
+        final bool? exactAlarmPermission = await androidImplementation.requestExactAlarmsPermission();
+        print('Exact alarm permission result: $exactAlarmPermission');
+      } catch (e) {
+        print('Exact alarm permission error (this is OK on older Android versions): $e');
+      }
+
+      return notificationPermission ?? false;
+    } catch (e) {
+      print('Error requesting permissions: $e');
+      return false;
+    }
+  }
+
+  /**
+   * Check if notifications are enabled
+   */
+  static Future<bool> areNotificationsEnabled() async {
+    try {
+      if (!_isInitialized) {
+        print('Service not initialized, cannot check permissions');
+        return false;
+      }
+
       final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
       _notifications.resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin>();
 
       if (androidImplementation != null) {
-        // Solicitar permisos de notificación exacta (Android 13+)
-        final bool? exactAlarmGranted = await androidImplementation.requestExactAlarmsPermission();
-        print('Exact alarm permission: $exactAlarmGranted');
-
-        // Solicitar permisos de notificación
-        final bool? notificationGranted = await androidImplementation.requestNotificationsPermission();
-        print('Notification permission: $notificationGranted');
-
-        return notificationGranted ?? false;
+        final bool? enabled = await androidImplementation.areNotificationsEnabled();
+        print('Notifications enabled status: $enabled');
+        return enabled ?? false;
       }
 
-      // Fallback usando permission_handler
-      PermissionStatus status = await Permission.notification.status;
-      print('Current notification permission status: $status');
-
-      if (status.isDenied || status.isRestricted || status.isLimited) {
-        status = await Permission.notification.request();
-        print('New permission status after request: $status');
-      }
-
-      return status.isGranted;
+      return false;
     } catch (e) {
-      print('Error requesting permissions: $e');
+      print('Error checking notification status: $e');
       return false;
     }
   }
@@ -131,31 +170,40 @@ class NotificationService {
    */
   static Future<void> scheduleReminders(int intervalMinutes) async {
     try {
+      print('Scheduling reminders with interval: $intervalMinutes minutes');
+
       // Verificar que el servicio esté inicializado
       if (!_isInitialized) {
         print('Notification service not initialized');
+        await init();
+        if (!_isInitialized) {
+          print('Failed to initialize service for scheduling');
+          return;
+        }
+      }
+
+      // Verificar permisos primero
+      final bool enabled = await areNotificationsEnabled();
+      if (!enabled) {
+        print('Notifications not enabled, cannot schedule');
         return;
       }
 
-      // Check permissions first
-      final bool permissionsGranted = await requestPermissions();
-      if (!permissionsGranted) {
-        print('Notification permissions denied');
-        return;
-      }
-
-      // Cancel all existing notifications SOLO si tenemos permisos
+      // Cancelar notificaciones existentes
       try {
         await _notifications.cancelAll();
         print('Previous notifications cancelled');
       } catch (e) {
-        print('Error cancelling notifications (this is OK on first run): $e');
+        print('Error cancelling notifications: $e');
       }
 
-      // If interval is 0, don't schedule anything
-      if (intervalMinutes <= 0) return;
+      // Si el intervalo es 0, no programar nada
+      if (intervalMinutes <= 0) {
+        print('Interval is 0, not scheduling any notifications');
+        return;
+      }
 
-      // Configure Android notification details
+      // Configurar detalles de notificación para Android
       const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
         'hydratrack_reminder',
         'Water Reminders',
@@ -165,47 +213,48 @@ class NotificationService {
         icon: '@mipmap/ic_launcher',
         enableVibration: true,
         playSound: true,
+        autoCancel: true,
       );
 
-      // General configuration (Android only)
       const NotificationDetails platformDetails = NotificationDetails(
         android: androidDetails,
       );
 
-      // Schedule notifications only for the next 24 hours
+      // Programar notificaciones para las próximas 24 horas
       final DateTime now = DateTime.now();
       final DateTime tomorrow = DateTime(now.year, now.month, now.day + 1);
 
       int scheduledCount = 0;
       int notificationId = 1;
 
-      // Programar notificaciones cada X minutos hasta mañana
       DateTime nextNotification = now.add(Duration(minutes: intervalMinutes));
 
-      while (nextNotification.isBefore(tomorrow) && scheduledCount < 50) { // Límite de seguridad
-        // Get current language (simplificado)
+      while (nextNotification.isBefore(tomorrow) && scheduledCount < 50) {
         const String languageCode = 'es'; // Por ahora usar español por defecto
 
-        await _notifications.zonedSchedule(
-          notificationId,
-          'HydraTrack',
-          getRandomMessage(languageCode),
-          tz.TZDateTime.from(nextNotification, tz.local),
-          platformDetails,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
-          matchDateTimeComponents: null,
-        );
+        try {
+          await _notifications.zonedSchedule(
+            notificationId,
+            'HydraTrack',
+            getRandomMessage(languageCode),
+            tz.TZDateTime.from(nextNotification, tz.local),
+            platformDetails,
+            androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+            uiLocalNotificationDateInterpretation:
+            UILocalNotificationDateInterpretation.absoluteTime,
+          );
 
-        print('Notification $notificationId scheduled for: $nextNotification');
+          print('Notification $notificationId scheduled for: $nextNotification');
+          scheduledCount++;
+        } catch (e) {
+          print('Error scheduling notification $notificationId: $e');
+        }
 
-        scheduledCount++;
         notificationId++;
         nextNotification = nextNotification.add(Duration(minutes: intervalMinutes));
       }
 
-      print('$scheduledCount reminders scheduled every $intervalMinutes minutes');
+      print('Successfully scheduled $scheduledCount reminders');
     } catch (e) {
       print('Error scheduling reminders: $e');
     }
@@ -229,23 +278,37 @@ class NotificationService {
   }
 
   /**
-   * Check if notifications are enabled
+   * Show a test notification immediately
    */
-  static Future<bool> areNotificationsEnabled() async {
+  static Future<void> showTestNotification() async {
     try {
-      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
-      _notifications.resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin>();
-
-      if (androidImplementation != null) {
-        final bool? enabled = await androidImplementation.areNotificationsEnabled();
-        return enabled ?? false;
+      if (!_isInitialized) {
+        await init();
       }
 
-      return false;
+      const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
+        'hydratrack_test',
+        'Test Notifications',
+        channelDescription: 'Test notifications',
+        importance: Importance.high,
+        priority: Priority.high,
+        icon: '@mipmap/ic_launcher',
+      );
+
+      const NotificationDetails platformDetails = NotificationDetails(
+        android: androidDetails,
+      );
+
+      await _notifications.show(
+        999,
+        'HydraTrack Test',
+        '¡Las notificaciones funcionan correctamente!',
+        platformDetails,
+      );
+
+      print('Test notification sent');
     } catch (e) {
-      print('Error checking notification status: $e');
-      return false;
+      print('Error showing test notification: $e');
     }
   }
 }
