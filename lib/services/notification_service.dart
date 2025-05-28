@@ -85,7 +85,7 @@ class NotificationService {
   }
 
   /**
-   * Request notification permissions - SIMPLIFICADO
+   * Request notification permissions
    */
   static Future<bool> requestPermissions() async {
     try {
