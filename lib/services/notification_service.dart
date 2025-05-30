@@ -95,7 +95,7 @@ class NotificationService {
       if (!_isInitialized) {
         await init();
         if (!_isInitialized) {
-          print('Failed to initialize notification service');
+          print('NotificationService: Failed to initialize notification service before permission request.');
           return false;
         }
       }
@@ -105,35 +105,35 @@ class NotificationService {
           AndroidFlutterLocalNotificationsPlugin>();
 
       if (androidImplementation == null) {
-        print('Android implementation not found');
+        print('NotificationService: Android implementation not found. Cannot request permission.');
         return false;
       }
 
-      // Primero verificar si ya tenemos permisos
+      print('NotificationService: Checking if notifications are already enabled...');
       final bool? alreadyEnabled = await androidImplementation.areNotificationsEnabled();
-      print('Notifications already enabled: $alreadyEnabled');
+      print('NotificationService: Notifications already enabled status: $alreadyEnabled');
 
       if (alreadyEnabled == true) {
+        print('NotificationService: Notifications were already enabled. Skipping permission request.');
         return true;
       }
 
-      // Solicitar permisos de notificación (esto debería mostrar el diálogo nativo)
-      print('Requesting notification permission...');
+      print('NotificationService: About to call androidImplementation.requestNotificationsPermission()...');
       final bool? notificationPermission = await androidImplementation.requestNotificationsPermission();
-      print('Notification permission result: $notificationPermission');
+      print('NotificationService: Result of requestNotificationsPermission: $notificationPermission');
 
       // Para Android 12+ solicitar permisos de alarma exacta si es necesario
       try {
-        print('Requesting exact alarms permission...');
+        print('NotificationService: About to call androidImplementation.requestExactAlarmsPermission()...');
         final bool? exactAlarmPermission = await androidImplementation.requestExactAlarmsPermission();
-        print('Exact alarm permission result: $exactAlarmPermission');
+        print('NotificationService: Result of requestExactAlarmsPermission: $exactAlarmPermission');
       } catch (e) {
-        print('Exact alarm permission error (this is OK on older Android versions): $e');
+        print('NotificationService: Error requesting exact alarm permission: $e');
       }
 
       return notificationPermission ?? false;
     } catch (e) {
-      print('Error requesting permissions: $e');
+      print('NotificationService: Error in requestPermissions: $e');
       return false;
     }
   }
